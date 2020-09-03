@@ -4,6 +4,9 @@ Proof-of-concept of using Julia code for doing mesh processing in Blender.
 
 Paul Melis (paul.melis@surf.nl), September 3, 2020
 
+Contributions:
+- Speedup using StaticArrays (Kristoffer Carlsson)
+
 ## Overview
 
 A test of Catmull-Clark subdivision implemented in Julia, which gets called
@@ -34,24 +37,26 @@ Requirements:
   
 ## Performance
 
-See the `Julia` script in the Text Editor for the code used. Example results
+Note: this has been updated since my initial results posted to Twitter.
+
+See the `Julia` script in the Text Editor for the code used. Example results*
 on the Stanford bunny of 35,947 vertices and 69,451 triangles (on a Core i5 
 system @ 3.20 GHZ running Arch Linux):
 
 ```
-(Blender) Preparing data took 1.246ms
-(Julia) Building half edges done in 100.423ms
+(Blender) Preparing data took 1.833ms
+(Julia) Building half edges done in 113.959ms
 (Julia) Input: 35947 vertices, 69451 polygons, 104288 polygon edges
 (Julia) Output: 209686 vertices, 208353 quads
-(Julia) Subdivision done in 284.266ms
-(Blender) Call to Julia subdivision took 1093.536ms
-(Blender) Updating subdivided mesh took 366.968ms
-(Blender) Total time: 1461.751ms
+(Julia) Subdivision done in 33.202ms
+(Blender) Call to Julia subdivision took 1038.673ms
+(Blender) Updating subdivided mesh took 369.763ms
+(Blender) Total time: 1410.269ms
 ```
 
-So 384.689ms (100.423+284.266) is spent in the Julia code doing the actual
-subdivision, less than 27%. The rest of the time is spent on marshaling data 
-between Julia and Blender/Python and other overhead*. 
+So 147.161ms (113.959+33.202) is spent in the Julia code doing the actual
+subdivision, less than 11%. The rest of the time is spent on marshaling data 
+between Julia and Blender/Python and other overhead. 
 
 Applying a Subdivision Surface modifier on the same mesh from within Blender
 (the `Blender` script in the Text Editor):
@@ -67,7 +72,7 @@ by the amount of memory it allocates.
 But still, at the default `Levels Viewport` of 1 the number of vertices and
 faces in the subdivided model is exactly the same for the two cases. 
 
-The Julia case is computed **more than 9x faster** and uses significantly less memory 
+The Julia case is computed **more than 10x faster** and uses significantly less memory 
 (again, the latter may be caused by extra things the subsurf modifier stores).
 
 Note that when the Julia code is first executed from Blender it might take
@@ -76,9 +81,10 @@ runs of the code, including after editing the Julia source files, will be much
 faster as the compiled code is cached.
 
 * There does seem to be quite a bit of variance in the total time spent over 
-different runs, don't really know where that is coming from. But the reported time 
-spent on the subdivision in Julia stays below 400ms in most cases, with the 
-variance apparently coming from the Blender-Julia boundary.
+different runs on my system, I don't really know where that is coming from (the
+workstation isn't doing much else and CPU scaling is disabled). 
+But the reported time spent on the subdivision in Julia stays below 250ms in 
+most cases, with the variance apparently coming from the Blender-Julia boundary.
 
 ## Optimization
 
@@ -92,7 +98,7 @@ Possible optimizations on the Julia side:
 
 - Performance annotations, such as `@inbounds`, `@fastmath` and `@simd`
 - Look into type stability, `@code_warntype`, etc
-- Using StaticArrays.jl in strategic places
+- ~~Using StaticArrays.jl in strategic places~~
 - Using a 2D array instead of a 1D array for holding vertices, which would
   make get_vertex and set_vertex simpler, but this might not matter much.
 
