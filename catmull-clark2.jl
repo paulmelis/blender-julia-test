@@ -1,3 +1,17 @@
+# Copyright 2020 Paul Melis (paul.melis@surf.nl)
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 using Printf
 include("halfedge.jl")
 
@@ -21,8 +35,6 @@ end
 
 const Edge = Tuple{Int32,Int32}
 const Face = Int32
-const FacePair = Tuple{Face,Face}
-const Vec3 = Vector{Float32}          # StaticArray?
 
 function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
     #println(vertices)
@@ -39,11 +51,11 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     
     println("(Julia) Input: $(num_vertices) vertices, $(num_faces) polygons, $(num_edges) polygon edges")
         
-    # One new vertex for each input face, one new vertex for each edge        
+    # One new vertex for each input face, one new vertex for each edge
+    output_num_vertices = num_vertices + num_faces + num_edges
     # 1 .. NV           Original input vertices (initially, are overwritten later on)
     # NV+1 .. NV+NF     New face points 
-    # NV+NF+1 .. end    New edge points
-    output_num_vertices = num_vertices + num_faces + num_edges
+    # NV+NF+1 .. end    New edge points    
     output_vertices = Array{Float32}(undef, 3*output_num_vertices)
     # Copy original input vertex positions, to be modified later on
     output_vertices[1:3*num_vertices] = vertices

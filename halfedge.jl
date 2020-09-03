@@ -1,3 +1,17 @@
+# Copyright 2020 Paul Melis (paul.melis@surf.nl)
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 mutable struct HalfEdge
     source  ::UInt32        # Vertex index
     target  ::UInt32        # Vertex index
@@ -26,13 +40,16 @@ function build(vertices, loop_start, loop_total, loops)
     # Temporary index
     half_edges = Dict{VertexPair, HalfEdge}()       
     
+    # For each vertex an arbitrary half-edge starting from that vertex    
     vertex_start_edges = Dict{UInt32, HalfEdge}()
+    # For each face an arbitrary half-edge making up that face
     face_start_edges = Dict{UInt32, HalfEdge}()        
     
     num_vertices = trunc(UInt32, length(vertices) / 3)
     num_faces = length(loop_start)
     
-    # One of the two edges of a polygon edge
+    # For each polygon edge (not half-edge) one of the half-edges making up
+    # that polygon edge
     edges = HalfEdge[]
     num_edges = 0      
     
