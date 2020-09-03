@@ -1,6 +1,7 @@
-# Using Julia in Blender
+# Mesh processing with Julia in Blender
 
 Proof-of-concept of using Julia code for doing mesh processing in Blender.
+
 Paul Melis (paul.melis@surf.nl), September 3, 2020
 
 ## Overview
