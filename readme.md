@@ -97,14 +97,18 @@ far more efficient compiled code compared to Python's interpreted execution.
 Possible optimizations on the Julia side:
 
 - Performance annotations, such as `@inbounds`, `@fastmath` and `@simd`
+
 - Reduce the number of allocations. E.g. for the case above `@time` reports
   `0.255132 seconds (277.99 k allocations: 44.658 MiB, 16.89% gc time)`. The
   high number of allocations is partly caused by having separate `HalfEdge` instances.
   The Bunny model has 104288 edges, leading to roughly double that number of `HalfEdge`'s
   being allocated. Pre-allocating all needed `HalfEdge` instances in a single 
   array would be possible (`sum(loops)` gives the required number). 
+
 - Look more into type stability, `@code_warntype`, etc
+
 - ~~Using StaticArrays.jl in strategic places~~
+
 - Using a 2D array instead of a 1D array for holding vertices, which would
   make get_vertex and set_vertex simpler, but this might not matter much.
 
@@ -113,15 +117,19 @@ The transfer of mesh data between Blender and Julia is far from optimal:
 - On the Blender side the mesh data is extracted using calls to `foreach_get()`
   into preallocated NumPy arrays. Perhaps there is a way to directly access
   the underlying data from the mesh object?
+  
 - Even though the Julia code returns a set of `Array{Float32}` values these
-  get turned into Python lists when crossing the boundary to Blender. Which are 
-  then turned into NumPy arrays on the Blender side for setting up the result mesh.
-  All in all there's quite a lot of copying going on.
+  get turned into Python lists when crossing the boundary to Blender, for some
+  reason. See #xxx for more details. The lists are then turned into NumPy arrays 
+  on the Blender side for setting up the result mesh. All in all there's quite a 
+  lot of copying going on.
+  
 - Blender (and Python) use 0-based indexing, while Julia uses 1-based indexing.
   We +1/-1 alter the relevant data on the transfer between the two worlds, which
   shouldn't cost that much time, but I don't see an easy way to stick to a single 
   indexing scheme on both sides. Julia has some support for 0-based indexing,
   but it apparently comes with some caveats.
+  
 - PyJulia uses the Julia PyCall package for data conversion between Python and Julia,
   which should be able to use zero-copy transfer between the two, judging by 
   https://github.com/JuliaPy/PyCall.jl#arrays-and-pyarray. But so far that
