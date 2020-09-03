@@ -33,22 +33,12 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     
     println("Input: $(num_vertices) vertices, $(num_faces) polygons, $(num_edges) polygon edges")
         
-    # One new vertex for each input face, one new vertex for each edge
-    output_num_vertices = num_vertices + num_faces + num_edges
-    
+    # One new vertex for each input face, one new vertex for each edge        
     # 1 .. NV           Original input vertices (initially, are overwritten later on)
     # NV+1 .. NV+NF     New face points 
     # NV+NF+1 .. end    New edge points
+    output_num_vertices = num_vertices + num_faces + num_edges
     output_vertices = Array{Float32}(undef, 3*output_num_vertices)
-    
-    function face_point_index(fi)
-        return num_vertices + fi
-    end
-
-    function edge_point_index(ei)
-        return num_vertices + num_faces + ei
-    end
-
     # Copy original input vertex positions, to be modified later on
     output_vertices[1:3*num_vertices] = vertices
     
@@ -60,6 +50,14 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     output_loops = Array{UInt32}(undef, 4*output_num_quads)
     
     println("Output: $(output_num_vertices) vertices, $(output_num_quads) quads")   
+    
+    function face_point_index(fi)
+        return num_vertices + fi
+    end
+
+    function edge_point_index(ei)
+        return num_vertices + num_faces + ei
+    end
 
     #
     # Subdivide
@@ -92,32 +90,75 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     for ei = 1:num_edges
         
         he = polygon_edges[ei]        
-        @assert he.sibling != nothing
-        he2 = he.sibling
         
-        left = he.face
-        right = he2.face
-        
-        edge_point = (                
-            get_vertex(output_vertices, face_point_index(left))
-            +
-            get_vertex(output_vertices, face_point_index(right))
+        edge_point = (
+            get_vertex(output_vertices, face_point_index(he.face))
             +
             get_vertex(output_vertices, he.source)
             +
             get_vertex(output_vertices, he.target)
-        ) / 4
+        )        
+        n = 3
         
-        set_vertex(output_vertices, edge_point_index(ei), edge_point)
+        if he.sibling != nothing
+            he2 = he.sibling
+            edge_point += get_vertex(output_vertices, face_point_index(he2.face))
+            n += 1
+        end
+        
+        set_vertex(output_vertices, edge_point_index(ei), edge_point / n)
     end
 
     # Move original input vertices to new positions
     
-    #println("EV ", edge_vertices)
-    #println("OV ", output_vertices)
+    for vi = 1:num_vertices
+                
+        P = get_vertex(output_vertices, vi)
+        F_sum = Vector{Float32}([0, 0, 0])
+        R_sum = Vector{Float32}([0, 0, 0])
+        n = 0
+        
+        he = start = vertex_start_edges[vi]
+        while true
+            F_sum += get_vertex(output_vertices, face_point_index(he.face))
+            # XXX could take out P here as use it once in R= below
+            R_sum += 0.5*(P + get_vertex(output_vertices, he.target))
+            n += 1
+            
+            # XXX need to recheck this works correctly
+            if he.sibling == nothing break end
+            
+            he = he.sibling.next
+            if he == start break end
+        end
+                
+        F = F_sum / n
+        R = R_sum / n
+        
+        set_vertex(output_vertices, vi, (F + 2*R + (n-3)*P) / n)        
+    end
     
-    #println("returning:")
-    #println(output_vertices)
+    # Create new face loops for the quads for each subdivided original face
+    
+    offs = 1
+    ofi = 1
+    
+    for fi = 1:num_faces
+    
+        he = start = face_start_edges[fi]
+        while true
+            output_loop_start[ofi] = offs          
+            output_loops[offs] = edge_point_index(he.index)
+            output_loops[offs+1] = he.target
+            output_loops[offs+2] = edge_point_index(he.next.index)
+            output_loops[offs+3] = face_point_index(he.face)
+            offs += 4
+            ofi += 1
+            
+            he = he.next            
+            if he == start break end
+        end            
+    end
     
     return output_vertices, output_loop_start, output_loop_total, output_loops
 end

@@ -2,6 +2,8 @@ mutable struct HalfEdge
     source  ::UInt32        # Vertex index
     target  ::UInt32        # Vertex index
     face    ::UInt32        # Face index
+    
+    index   ::UInt32        # Should be same value for sibling edge
 
     next    ::HalfEdge
     prev    ::HalfEdge
@@ -9,11 +11,11 @@ mutable struct HalfEdge
     # Can be nothing for a boundary edge
     sibling ::Union{HalfEdge, Nothing}
     
-    HalfEdge(s, t, f) = new(s, t, f)
+    HalfEdge(s, t, f, i) = new(s, t, f, i)
 end
 
 Base.show(io::IO, he::HalfEdge) = print(io, 
-    "HalfEdge(", he.source, " -> ", he.target, ", f:", he.face, ", ", 
+    "HalfEdge([", he.index, "] ", he.source, " -> ", he.target, ", f:", he.face, ", ", 
     he.sibling != nothing ? "s" : "!s", 
     ")")
 
@@ -32,12 +34,12 @@ function build(vertices, loop_start, loop_total, loops)
     
     # One of the two edges of a polygon edge
     edges = HalfEdge[]
-    num_edges = 0                   
+    num_edges = 0      
     
     for fi = 1:num_faces
     
         ls = loop_start[fi]
-        nv = loop_total[fi]        
+        nv = loop_total[fi]
         loop = loops[ls:ls+nv-1]
         
         first_he = nothing
@@ -48,9 +50,25 @@ function build(vertices, loop_start, loop_total, loops)
             next = (i+1) % nv + 1
             
             A = loop[cur]
-            B = loop[next]            
+            B = loop[next]
+
+            key = (A,B)
+            rkey = (B,A)
             
-            he = HalfEdge(A, B, fi)            
+            if haskey(half_edges, rkey)
+                he2 = half_edges[rkey]
+                he = HalfEdge(A, B, fi, he2.index)
+                he2.sibling = he
+                he.sibling = he2
+            else
+                num_edges += 1
+                he = HalfEdge(A, B, fi, num_edges)
+                he.sibling = nothing
+                push!(edges, he)
+            end
+            
+            @assert !haskey(half_edges, key)
+            half_edges[key] = he              
             
             if i == 0
                 face_start_edges[fi] = he
@@ -59,23 +77,6 @@ function build(vertices, loop_start, loop_total, loops)
             
             if !haskey(vertex_start_edges, A)
                 vertex_start_edges[A] = he
-            end
-            
-            key = (A,B)            
-            rkey = (B,A)            
-            
-            @assert !haskey(half_edges, key)
-            half_edges[key] = he  
-            num_edges += 1
-            
-            if haskey(half_edges, rkey)
-                he2 = half_edges[rkey]
-                he2.sibling = he
-                he.sibling = he2
-                num_edges -= 1
-            else
-                he.sibling = nothing
-                push!(edges, he)
             end
             
             if last_halfedge != nothing
@@ -90,6 +91,8 @@ function build(vertices, loop_start, loop_total, loops)
         first_he.prev = last_halfedge
     
     end
+    
+    @assert length(vertex_start_edges) == num_vertices
     
     return num_vertices, num_faces, num_edges, vertex_start_edges, face_start_edges, edges
     
