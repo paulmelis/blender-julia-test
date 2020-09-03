@@ -120,7 +120,7 @@ The transfer of mesh data between Blender and Julia is far from optimal:
   
 - Even though the Julia code returns a set of `Array{Float32}` values these
   get turned into Python lists when crossing the boundary to Blender, for some
-  reason. See #xxx for more details. The lists are then turned into NumPy arrays 
+  reason (see #2 for more details). The lists are then turned into NumPy arrays 
   on the Blender side for setting up the result mesh. All in all there's quite a 
   lot of copying going on.
   
