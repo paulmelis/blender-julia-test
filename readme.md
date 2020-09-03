@@ -44,18 +44,18 @@ on the Stanford bunny of 35,947 vertices and 69,451 triangles (on a Core i5
 system @ 3.20 GHZ running Arch Linux):
 
 ```
-(Blender) Preparing data took 1.833ms
-(Julia) Building half edges done in 113.959ms
+(Blender) Preparing data took 1.230ms
+(Julia) Building half edges done in 92.614ms
 (Julia) Input: 35947 vertices, 69451 polygons, 104288 polygon edges
 (Julia) Output: 209686 vertices, 208353 quads
-(Julia) Subdivision done in 33.202ms
-(Blender) Call to Julia subdivision took 1038.673ms
-(Blender) Updating subdivided mesh took 369.763ms
-(Blender) Total time: 1410.269ms
+(Julia) Subdivision done in 34.996ms
+(Blender) Call to Julia subdivision took 1005.626ms
+(Blender) Updating subdivided mesh took 372.849ms
+(Blender) Total time: 1379.705ms
 ```
 
-So 147.161ms (113.959+33.202) is spent in the Julia code doing the actual
-subdivision, less than 11%. The rest of the time is spent on marshaling data 
+So 127.61ms (92.614+34.996) is spent in the Julia code doing the actual
+subdivision, a bit over 9%. The rest of the time is spent on marshaling data 
 between Julia and Blender/Python and other overhead. 
 
 Applying a Subdivision Surface modifier on the same mesh from within Blender
@@ -97,7 +97,7 @@ far more efficient compiled code compared to Python's interpreted execution.
 Possible optimizations on the Julia side:
 
 - Performance annotations, such as `@inbounds`, `@fastmath` and `@simd`
-- Look into type stability, `@code_warntype`, etc
+- Look more into type stability, `@code_warntype`, etc
 - ~~Using StaticArrays.jl in strategic places~~
 - Using a 2D array instead of a 1D array for holding vertices, which would
   make get_vertex and set_vertex simpler, but this might not matter much.

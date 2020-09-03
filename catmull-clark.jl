@@ -64,7 +64,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     # Output is always all quads, as each input face is split into n quads, 
     # where n is the number of vertices in the face
     output_num_quads = sum(loop_total)
-    output_loop_start = [1:4:output_num_quads*4;]
+    output_loop_start = collect(range(UInt32(1), step=UInt32(4), stop=UInt32(output_num_quads*4)))
     output_loop_total = fill(UInt32(4), output_num_quads)   
     output_loops = Array{UInt32}(undef, 4*output_num_quads)
     
@@ -145,7 +145,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         while true
             F_sum += get_vertex(output_vertices, face_point_index(he.face))
             # XXX could take out P here as use it once in R= below
-            R_sum += 0.5*(P + get_vertex(output_vertices, he.target))
+            R_sum += 0.5f0 * (P + get_vertex(output_vertices, he.target))
             n += 1
             
             # XXX need to recheck this works correctly
