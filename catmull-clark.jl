@@ -13,12 +13,13 @@
 # limitations under the License.
 
 using Printf
+using StaticArrays
 include("halfedge.jl")
 
 # Some utility functions to handle Julia's 1-based indexing
 function get_vertex(V, idx)
     s = 1+3*(idx-1)
-    return V[s:s+2]
+    return SVector(V[s], V[s+1], V[s+2])
 end
 
 function set_vertex(V, idx, v)
@@ -83,8 +84,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     
     # Add new face points: average of existing original face vertices
     for fi = 1:num_faces
-                
-        sum = Vector{Float32}([0, 0, 0])
+        sum = SVector{3, Float32}(0.0, 0.0, 0.0)
         n = 0
         
         he = start = face_start_edges[fi]
@@ -137,8 +137,8 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         end
                 
         P = get_vertex(output_vertices, vi)
-        F_sum = Vector{Float32}([0, 0, 0])
-        R_sum = Vector{Float32}([0, 0, 0])
+        F_sum = SVector{3, Float32}(0, 0, 0)
+        R_sum = SVector{3, Float32}(0, 0, 0)
         n = 0
         
         he = start = vertex_start_edges[vi]
