@@ -97,6 +97,12 @@ far more efficient compiled code compared to Python's interpreted execution.
 Possible optimizations on the Julia side:
 
 - Performance annotations, such as `@inbounds`, `@fastmath` and `@simd`
+- Reduce the number of allocations. E.g. for the case above `@time` reports
+  `0.255132 seconds (277.99 k allocations: 44.658 MiB, 16.89% gc time)`. The
+  high number of allocations is partly caused by having separate `HalfEdge` instances.
+  The Bunny model has 104288 edges, leading to roughly double that number of `HalfEdge`'s
+  being allocated. Pre-allocating all needed `HalfEdge` instances in a single 
+  array would be possible (`sum(loops)` gives the required number). 
 - Look more into type stability, `@code_warntype`, etc
 - ~~Using StaticArrays.jl in strategic places~~
 - Using a 2D array instead of a 1D array for holding vertices, which would
