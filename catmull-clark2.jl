@@ -1,3 +1,4 @@
+using Printf
 include("halfedge.jl")
 
 # Some utility functions to handle Julia's 1-based indexing
@@ -29,9 +30,14 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     #println(loop_total)
     #println(loops)
     
+    t0 = time()
+    
     num_vertices, num_faces, num_edges, vertex_start_edges, face_start_edges, polygon_edges = build(vertices, loop_start, loop_total, loops)
     
-    println("Input: $(num_vertices) vertices, $(num_faces) polygons, $(num_edges) polygon edges")
+    t1 = time()
+    @printf("(Julia) Building half edges done in %.3fms\n", 1000*(t1-t0))
+    
+    println("(Julia) Input: $(num_vertices) vertices, $(num_faces) polygons, $(num_edges) polygon edges")
         
     # One new vertex for each input face, one new vertex for each edge        
     # 1 .. NV           Original input vertices (initially, are overwritten later on)
@@ -49,7 +55,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     output_loop_total = fill(UInt32(4), output_num_quads)   
     output_loops = Array{UInt32}(undef, 4*output_num_quads)
     
-    println("Output: $(output_num_vertices) vertices, $(output_num_quads) quads")   
+    println("(Julia) Output: $(output_num_vertices) vertices, $(output_num_quads) quads")   
     
     function face_point_index(fi)
         return num_vertices + fi
@@ -112,6 +118,11 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     # Move original input vertices to new positions
     
     for vi = 1:num_vertices
+    
+        if !haskey(vertex_start_edges, vi)
+            # Skip unconnected vertices
+            continue
+        end
                 
         P = get_vertex(output_vertices, vi)
         F_sum = Vector{Float32}([0, 0, 0])
@@ -159,6 +170,9 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
             if he == start break end
         end            
     end
+    
+    t2 = time()
+    @printf("(Julia) Subdivision done in %.3fms\n", 1000*(t2-t1))
     
     return output_vertices, output_loop_start, output_loop_total, output_loops
 end

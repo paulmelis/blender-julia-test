@@ -68,7 +68,7 @@ function build(vertices, loop_start, loop_total, loops)
             end
             
             @assert !haskey(half_edges, key)
-            half_edges[key] = he              
+            half_edges[key] = he          
             
             if i == 0
                 face_start_edges[fi] = he
@@ -91,8 +91,10 @@ function build(vertices, loop_start, loop_total, loops)
         first_he.prev = last_halfedge
     
     end
-    
-    @assert length(vertex_start_edges) == num_vertices
+
+    # XXX this will trigger on models with unconnected vertices, but those
+    # shouldn't really hurt later on
+    #@assert length(vertex_start_edges) == num_vertices
     
     return num_vertices, num_faces, num_edges, vertex_start_edges, face_start_edges, edges
     
