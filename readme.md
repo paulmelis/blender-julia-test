@@ -15,10 +15,10 @@ from Blender through Python.
   the mesh data arrays, call the Julia code and process the results.
   
 Note: the Julia code contains only a rudimentary Catmull-Clark implementation, 
-without advanced things like edge sharpness. It will probably not even handle 
-all meshes correctly, especially for the case of boundary edges things might 
-go wrong. But it is also less than 300 lines of code, which is kind of amazing
-given the performance shown below.
+without advanced things like edge sharpness, nor much thought about the design. 
+It will probably not even handle all meshes correctly, especially for the case 
+of boundary edges things might go wrong. But it is also less than 300 lines of 
+code, which is kind of amazing given the performance shown below.
   
 Requirements:
 - Blender 2.90 (older might work as well)
