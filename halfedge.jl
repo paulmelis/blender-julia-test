@@ -36,7 +36,7 @@ Base.show(io::IO, he::HalfEdge) = print(io,
 const VertexPair = Tuple{UInt32, UInt32}
 
 function build(vertices, loop_start, loop_total, loops)
-    
+
     # Temporary index
     half_edges = Dict{VertexPair, HalfEdge}()       
     

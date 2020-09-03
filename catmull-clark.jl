@@ -14,6 +14,7 @@
 
 using Printf
 using StaticArrays
+
 include("halfedge.jl")
 
 # Some utility functions to handle Julia's 1-based indexing
@@ -36,6 +37,10 @@ end
 
 const Edge = Tuple{Int32,Int32}
 const Face = Int32
+
+function time_subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
+    @timev subdivide(vertices, loop_start, loop_total, loops)
+end
 
 function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
     #println(vertices)
