@@ -34,24 +34,24 @@ Requirements:
   
 ## Performance
 
-See the `Julia` script in the Text Editor for the code used. Example result
+See the `Julia` script in the Text Editor for the code used. Example results
 on the Stanford bunny of 35,947 vertices and 69,451 triangles (on a Core i5 
 system @ 3.20 GHZ running Arch Linux):
 
 ```
-(Blender) Preparing data took 1.269ms
-(Julia) Building half edges done in 236.119ms
+(Blender) Preparing data took 1.246ms
+(Julia) Building half edges done in 100.423ms
 (Julia) Input: 35947 vertices, 69451 polygons, 104288 polygon edges
 (Julia) Output: 209686 vertices, 208353 quads
-(Julia) Subdivision done in 307.955ms
-(Blender) Call to Julia subdivision took 863.633ms
-(Blender) Updating subdivided mesh took 371.530ms
-(Blender) Total time: 1236.431ms
+(Julia) Subdivision done in 284.266ms
+(Blender) Call to Julia subdivision took 1093.536ms
+(Blender) Updating subdivided mesh took 366.968ms
+(Blender) Total time: 1461.751ms
 ```
 
-So 544.074ms (236.119+307.955) is spent in the Julia code doing the actual
-subdivision, less than 45%. The rest of the time is spent on marshaling data 
-between Julia and Blender/Python and other overhead.
+So 384.689ms (100.423+284.266) is spent in the Julia code doing the actual
+subdivision, less than 27%. The rest of the time is spent on marshaling data 
+between Julia and Blender/Python and other overhead*. 
 
 Applying a Subdivision Surface modifier on the same mesh from within Blender
 (the `Blender` script in the Text Editor):
@@ -67,8 +67,18 @@ by the amount of memory it allocates.
 But still, at the default `Levels Viewport` of 1 the number of vertices and
 faces in the subdivided model is exactly the same for the two cases. 
 
-The Julia case is computed **almost 11x faster** and uses significantly less memory 
+The Julia case is computed **more than 9x faster** and uses significantly less memory 
 (again, the latter may be caused by extra things the subsurf modifier stores).
+
+Note that when the Julia code is first executed from Blender it might take
+quite a bit of time, due to Julia's on-demand code compilation. Subsequent
+runs of the code, including after editing the Julia source files, will be much
+faster as the compiled code is cached.
+
+* There does seem to be quite a bit of variance in the total time spent over 
+different runs, don't really know where that is coming from. But the reported time 
+spent on the subdivision in Julia stays below 400ms in most cases, with the 
+variance apparently coming from the Blender-Julia boundary.
 
 ## Optimization
 
