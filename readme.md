@@ -73,7 +73,7 @@ But still, at the default `Levels Viewport` of 1 the number of vertices and
 faces in the subdivided model is exactly the same for the two cases. 
 
 The Julia case is computed **more than 10x faster** and uses significantly less memory 
-(again, the latter may be caused by extra things the subsurf modifier stores).
+(again, the latter may be caused by extra things the subsurf modifier stores) **.
 
 Note that when the Julia code is first executed from Blender it might take
 quite a bit of time, due to Julia's on-demand code compilation. Subsequent
@@ -85,6 +85,9 @@ different runs on my system, I don't really know where that is coming from (the
 workstation isn't doing much else and CPU scaling is disabled). 
 But the reported time spent on the subdivision in Julia stays below 250ms in 
 most cases, with the variance apparently coming from the Blender-Julia boundary.
+
+** The workaround described in #2, replacing Blender's `numpy` with the newest
+one from `pip` fixes a return type issue and provides another 2x speedup.
 
 ## Optimization
 
@@ -119,10 +122,11 @@ The transfer of mesh data between Blender and Julia is far from optimal:
   the underlying data from the mesh object?
   
 - Even though the Julia code returns a set of `Array{Float32}` values these
-  get turned into Python lists when crossing the boundary to Blender, for some
-  reason (see #2 for more details). The lists are then turned into NumPy arrays 
-  on the Blender side for setting up the result mesh. All in all there's quite a 
-  lot of copying going on.
+  get turned into Python lists when crossing the boundary to Blender. This appears
+  to be caused by the numpy included with Blender, see #2 for more details. 
+  The returned lists are then turned into NumPy arrays  on the Blender side for 
+  setting up the result mesh. All in all there's quite a lot of copying going on
+  because of this.
   
 - Blender (and Python) use 0-based indexing, while Julia uses 1-based indexing.
   We +1/-1 alter the relevant data on the transfer between the two worlds, which
