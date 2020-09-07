@@ -139,8 +139,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         he = start = vertex_start_edges[vi]
         while true
             F_sum += get_vertex(output_vertices, face_point_index(he.face))
-            # XXX could take out P here and use it once in R= below
-            R_sum += 0.5f0 * (P + get_vertex(output_vertices, he.target))
+            R_sum += get_vertex(output_vertices, he.target)
             n += 1
             
             # XXX need to recheck this works correctly
@@ -151,7 +150,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         end
                 
         F = F_sum / n
-        R = R_sum / n
+        R = R_sum / (2*n) + 0.5f0 * P
         
         set_vertex(output_vertices, vi, (F + 2*R + (n-3)*P) / n)        
     end

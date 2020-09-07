@@ -39,9 +39,9 @@ Requirements:
 
 Note: this has been updated since my initial results posted to Twitter.
 
-See the `Julia` script in the Text Editor for the code used. Example results [1]
-on the Stanford bunny of 35,947 vertices and 69,451 triangles (on a Core i5 
-system @ 3.20 GHZ running Arch Linux):
+See the `subdivide.py` script for the code used, which is also loaded in 
+the Text Editor in `test.blend`. Example results [1] on the Stanford bunny 
+of 35,947 vertices and 69,451 triangles (on a Core i5 system @ 3.20 GHZ running Arch Linux):
 
 ```
 (Blender) Preparing data took 1.230ms
