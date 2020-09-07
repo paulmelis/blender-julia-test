@@ -28,16 +28,6 @@ function set_vertex(V, idx, v)
     V[s:s+2] = v
 end
 
-function add_edge_face(edge_faces, A, B, left_face_index)
-    #println("add_edge_face ", A, " ", B, " ", left_face_index)
-    edge_key = (A,B)
-    @assert !haskey(edge_faces, edge_key)
-    edge_faces[edge_key] = left_face_index
-end
-
-const Edge = Tuple{Int32,Int32}
-const Face = Int32
-
 function time_subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
     @timev subdivide(vertices, loop_start, loop_total, loops)
 end
