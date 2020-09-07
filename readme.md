@@ -86,8 +86,9 @@ workstation isn't doing much else and CPU scaling is disabled).
 But the reported time spent on the subdivision in Julia stays below 250ms in 
 most cases, with the variance apparently coming from the Blender-Julia boundary.
 
-[2] The workaround described in #2, replacing Blender's `numpy` with the newest
-one from `pip` fixes a return type issue and provides another 2x speedup.
+[2] The workaround described in [this issue](https://github.com/paulmelis/blender-julia-test/issues/2), 
+replacing Blender's `numpy` with the newest one from `pip` fixes a return type 
+issue and provides another 2x speedup.
 
 ## Optimization
 
