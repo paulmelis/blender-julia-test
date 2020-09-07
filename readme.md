@@ -39,7 +39,7 @@ Requirements:
 
 Note: this has been updated since my initial results posted to Twitter.
 
-See the `Julia` script in the Text Editor for the code used. Example results*
+See the `Julia` script in the Text Editor for the code used. Example results [1]
 on the Stanford bunny of 35,947 vertices and 69,451 triangles (on a Core i5 
 system @ 3.20 GHZ running Arch Linux):
 
@@ -73,20 +73,20 @@ But still, at the default `Levels Viewport` of 1 the number of vertices and
 faces in the subdivided model is exactly the same for the two cases. 
 
 The Julia case is computed **more than 10x faster** and uses significantly less memory 
-(again, the latter may be caused by extra things the subsurf modifier stores) **.
+(again, the latter may be caused by extra things the subsurf modifier stores) [2].
 
 Note that when the Julia code is first executed from Blender it might take
 quite a bit of time, due to Julia's on-demand code compilation. Subsequent
 runs of the code, including after editing the Julia source files, will be much
 faster as the compiled code is cached.
 
-* There does seem to be quite a bit of variance in the total time spent over 
+[1] There does seem to be quite a bit of variance in the total time spent over 
 different runs on my system, I don't really know where that is coming from (the
 workstation isn't doing much else and CPU scaling is disabled). 
 But the reported time spent on the subdivision in Julia stays below 250ms in 
 most cases, with the variance apparently coming from the Blender-Julia boundary.
 
-** The workaround described in #2, replacing Blender's `numpy` with the newest
+[2] The workaround described in #2, replacing Blender's `numpy` with the newest
 one from `pip` fixes a return type issue and provides another 2x speedup.
 
 ## Optimization
