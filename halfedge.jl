@@ -45,13 +45,13 @@ function build(vertices, loop_start, loop_total, loops)
     # For each face an arbitrary half-edge making up that face
     face_start_edges = Dict{UInt32, HalfEdge}()        
     
-    num_vertices = trunc(UInt32, length(vertices) / 3)
-    num_faces = length(loop_start)
-    
     # For each polygon edge (not half-edge) one of the half-edges making up
     # that polygon edge
     edges = HalfEdge[]
-    num_edges = 0      
+    num_edges = 0
+
+    num_vertices = trunc(UInt32, length(vertices) / 3)
+    num_faces = length(loop_start)       
     
     for fi = 1:num_faces
     
@@ -62,9 +62,9 @@ function build(vertices, loop_start, loop_total, loops)
         first_he = nothing
         last_halfedge = nothing
         
-        for i = 0:nv-1
-            cur = i+1
-            next = (i+1) % nv + 1
+        for i = 1:nv
+            cur = i
+            next = i % nv + 1
             
             A = loop[cur]
             B = loop[next]
@@ -87,7 +87,7 @@ function build(vertices, loop_start, loop_total, loops)
             @assert !haskey(half_edges, key)
             half_edges[key] = he          
             
-            if i == 0
+            if i == 1
                 face_start_edges[fi] = he
                 first_he = he
             end

@@ -123,9 +123,9 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         )        
         n = 3
         
-        if he.sibling != nothing
-            he2 = he.sibling
-            edge_point += get_vertex(output_vertices, face_point_index(he2.face))
+        he = he.sibling
+        if he != nothing            
+            edge_point += get_vertex(output_vertices, face_point_index(he.face))
             n += 1
         end
         
@@ -149,7 +149,7 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
         he = start = vertex_start_edges[vi]
         while true
             F_sum += get_vertex(output_vertices, face_point_index(he.face))
-            # XXX could take out P here as use it once in R= below
+            # XXX could take out P here and use it once in R= below
             R_sum += 0.5f0 * (P + get_vertex(output_vertices, he.target))
             n += 1
             
