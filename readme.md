@@ -2,7 +2,7 @@
 
 Proof-of-concept of using Julia code for doing mesh processing in Blender.
 
-Paul Melis (paul.melis@surf.nl), September 3, 2020
+Paul Melis (paul.melis@surf.nl), September, 2020
 
 Contributions:
 - Speedup using StaticArrays (Kristoffer Carlsson)
@@ -14,13 +14,13 @@ from Blender through Python.
 
 - `catmull-clark.jl`: subdivision implementation
 - `halfedge.jl`: half-edge data structure for faster mesh queries
-- `test.blend`: example Blender file, contains some Python code to set up
-  the mesh data arrays, call the Julia code and process the results.
+- `subdivide.py`: Python code using `bpy` that calls the subdivision routines in Julia
+- `test.blend`: example Blender file
   
 Note: the Julia code contains only a rudimentary Catmull-Clark implementation, 
 without advanced things like edge sharpness, nor much thought about the design. 
 It will probably not even handle all meshes correctly, especially for the case 
-of boundary edges things might go wrong. But it is also less than 300 lines of 
+of boundary edges things might go wrong. But it is also only 300 lines of 
 code, which is kind of amazing given the performance shown below.
   
 Requirements:
@@ -36,8 +36,6 @@ Requirements:
   and then verify in the Python console within Blender that `import julia` succeeds.
   
 ## Performance
-
-Note: this has been updated since my initial results posted to Twitter.
 
 See the `subdivide.py` script for the code used, which is also loaded in 
 the Text Editor in `test.blend`. Example results [1] on the Stanford bunny 
@@ -114,20 +112,21 @@ Possible optimizations on the Julia side:
 - ~~Using StaticArrays.jl in strategic places~~
 
 - Using a 2D array instead of a 1D array for holding vertices, which would
-  make get_vertex and set_vertex simpler, but this might not matter much.
+  make `get_vertex` and `set_vertex` simpler, but this might not matter much.
 
 The transfer of mesh data between Blender and Julia is far from optimal:
 
 - On the Blender side the mesh data is extracted using calls to `foreach_get()`
-  into preallocated NumPy arrays. Perhaps there is a way to directly access
-  the underlying data from the mesh object?
+  into preallocated NumPy arrays. There is unfortunately no way to directly
+  access the underlying values (except vertex positions), as these are stored
+  per polygon.
   
 - Even though the Julia code returns a set of `Array{Float32}` values these
-  get turned into Python lists when crossing the boundary to Blender. This appears
-  to be caused by the numpy included with Blender, see #2 for more details. 
-  The returned lists are then turned into NumPy arrays  on the Blender side for 
-  setting up the result mesh. All in all there's quite a lot of copying going on
-  because of this.
+  get turned into Python lists when crossing the boundary to Blender. This is
+  caused by the lack of NumPy headers for the `numpy` module included with Blender, 
+  see issue #2 for more details. The returned lists are then turned into NumPy arrays 
+  on the Blender side for setting up the result mesh. All in all there's quite a 
+  lot of copying going on because of this.
   
 - Blender (and Python) use 0-based indexing, while Julia uses 1-based indexing.
   We +1/-1 alter the relevant data on the transfer between the two worlds, which
