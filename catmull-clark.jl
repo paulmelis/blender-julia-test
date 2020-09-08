@@ -173,9 +173,14 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
             R_sum = SVector{3, Float32}(0, 0, 0)
             n = 0
             
+            # R = average of edge midpoints 
+            #   = 1/n * sum_i(0.5*(P+Q_i))
+            #   = 1/n * (0.5*n*P + 0.5*sum_i(Q_i))
+            #   = 0.5*P + 1/2n * sum_i(Q_i) 
+            
             he = start = vertex_start_edges[vi]
             while true
-                F_sum += get_vertex(output_vertices, face_point_index(he.face))
+                F_sum += get_vertex(output_vertices, face_point_index(he.face))                
                 R_sum += get_vertex(output_vertices, he.target)
                 n += 1
                 
