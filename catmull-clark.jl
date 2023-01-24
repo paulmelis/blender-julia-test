@@ -29,7 +29,7 @@ function set_vertex(V, idx, v)
     V[s:s+2] = v
 end
 
-function time_subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
+function time_subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, loops::PyArray)
     @timev subdivide(vertices, loop_start, loop_total, loops)
 end
 

@@ -96,17 +96,17 @@ is still being subdivided. Running it in batch mode seems to give a more realist
 time:
 
 ```
-melis@juggle 10:31:~/concepts/blender-julia-test$ ~/software/blender-3.4.1-linux-x64/blender -b test2.blend --python-text Blender 
+melis@juggle 10:31:~/concepts/blender-julia-test$ ~/software/blender-3.4.1-linux-x64/blender -b test.blend --python-text Blender 
 Blender 3.4.1 (hash 55485cb379f7 built 2022-12-20 00:46:45)
 Read prefs: /home/melis/.config/blender/3.4/config/userpref.blend
-Read blend: /home/melis/concepts/blender-julia-test/test2.blend
+Read blend: /home/melis/concepts/blender-julia-test/test.blend
 Applying subsurf modifier took 12863.353ms
 
 ```
 
 The comparison isn't completely fair as the subsurf modifier probably does a lot
 more than just subdivide the mesh, in terms of data structures it builds, judging
-by the amount of memory it allocates.
+by the amount of memory it allocates[^2].
 
 But still, at the default `Levels Viewport` of 1 the number of vertices and
 faces in the subdivided model is very similar for the two cases. 
@@ -121,6 +121,11 @@ workstation isn't doing much else and CPU scaling is disabled).
 But the reported time spent on the subdivision in Julia stays below 250ms in 
 most cases, with the variance apparently coming from the Blender-Julia boundary.
 
+[^2]: Also, with a previous version of Blender the subdivided number of vertices and
+faces was exactly the same between Blender and the Julia code. But with 3.4.1 this
+is no longer the case: Blender 209,694 vertices & 208,359 quads, Julia 209,686 vertices
+& 208,353 quads.
+
 ## Optimization
 
 Basically no effort has been done to optimize the Julia code at this point. 
@@ -133,8 +138,8 @@ Possible optimizations on the Julia side:
 
 - Performance annotations, such as `@inbounds`, `@fastmath` and `@simd`
 
-- Reduce the number of allocations. E.g. for the case above `@time` reports
-  `0.255132 seconds (277.99 k allocations: 44.658 MiB, 16.89% gc time)`. The
+- Reduce the number of allocations. E.g. `@time` reports
+  `0.095474 seconds (277.98 k allocations: 43.458 MiB, 21.26% gc time)`. The
   high number of allocations is partly caused by having separate `HalfEdge` instances.
   The Bunny model has 104288 edges, leading to roughly double that number of `HalfEdge`'s
   being allocated. Pre-allocating all needed `HalfEdge` instances in a single 
