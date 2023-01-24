@@ -24,7 +24,7 @@ from Blender through Python.
 > of boundary edges things might go wrong. But it is also less than 300 lines of 
 > code, which is kind of amazing given the performance shown below.
 
-> **Warn
+> **Warning**
 > There currently is an issue when exiting Blender after running the Julia code.
 > It seems some memory corruption happens somewhere, as the error `munmap_chunk(): invalid pointer`
 > is shown and core is dumped. Haven't investigated yet.
