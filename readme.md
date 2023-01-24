@@ -2,7 +2,7 @@
 
 Proof-of-concept of using Julia code for doing mesh processing in Blender.
 
-Paul Melis (paul.melis@surf.nl), September 3, 2020
+Paul Melis (paul.melis@surf.nl), January 24, 2023
 
 Contributions:
 - Speedup using StaticArrays (Kristoffer Carlsson)
@@ -24,7 +24,7 @@ from Blender through Python.
 > of boundary edges things might go wrong. But it is also less than 300 lines of 
 > code, which is kind of amazing given the performance shown below.
 
-> **Warning
+> **Warn
 > There currently is an issue when exiting Blender after running the Julia code.
 > It seems some memory corruption happens somewhere, as the error `munmap_chunk(): invalid pointer`
 > is shown and core is dumped. Haven't investigated yet.
