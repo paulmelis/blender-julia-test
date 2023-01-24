@@ -29,16 +29,6 @@ function set_vertex(V, idx, v)
     V[s:s+2] = v
 end
 
-function add_edge_face(edge_faces, A, B, left_face_index)
-    #println("add_edge_face ", A, " ", B, " ", left_face_index)
-    edge_key = (A,B)
-    @assert !haskey(edge_faces, edge_key)
-    edge_faces[edge_key] = left_face_index
-end
-
-const Edge = Tuple{Int32,Int32}
-const Face = Int32
-
 function time_subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
     @timev subdivide(vertices, loop_start, loop_total, loops)
 end
@@ -80,6 +70,13 @@ function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, 
     
     num_vertices, num_faces, num_edges, vertex_start_edges, face_start_edges, polygon_edges = build(vertices, loop_start, loop_total, loops)
     
+    #println(num_vertices)
+    #println(num_faces)
+    #println(num_edges)
+    #println(vertex_start_edges)
+    #println(face_start_edges)
+    #println(polygon_edges)
+    
     t1 = time()
     @printf("(Julia) Building half edges done in %.3fms\n", 1000*(t1-t0))
     
@@ -100,6 +97,9 @@ function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, 
     output_loop_start = collect(range(UInt32(1), step=UInt32(4), stop=UInt32(output_num_quads*4)))
     output_loop_total = fill(UInt32(4), output_num_quads)   
     output_loops = Array{UInt32}(undef, 4*output_num_quads)
+    
+    # Wether a vertex is on the boundary
+    is_boundary_vertex = zeros(Bool, num_vertices)
     
     println("(Julia) Output: $(output_num_vertices) vertices, $(output_num_quads) quads")   
     
@@ -129,6 +129,8 @@ function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, 
             if he == start break end
         end
         
+        #println("face point ", fi, " ", sum/n)
+        
         set_vertex(output_vertices, face_point_index(fi), sum / n)
         
     end
@@ -140,24 +142,32 @@ function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, 
     
     for ei = 1:num_edges
         
-        he = polygon_edges[ei]        
-        
-        edge_point = (
-            get_vertex(output_vertices, face_point_index(he.face))
-            +
-            get_vertex(output_vertices, he.source)
-            +
-            get_vertex(output_vertices, he.target)
-        )        
-        n = 3
+        he = polygon_edges[ei]
         
         if he.sibling != nothing
-            he2 = he.sibling
-            edge_point += get_vertex(output_vertices, face_point_index(he2.face))
-            n += 1
+                
+            edge_point = (
+                get_vertex(output_vertices, face_point_index(he.face))
+                +
+                get_vertex(output_vertices, face_point_index(he.sibling.face))
+                +
+                get_vertex(output_vertices, he.source)
+                +
+                get_vertex(output_vertices, he.target)
+            ) / 4
+            
+        else
+            
+            # Boundary rule
+            edge_point = 0.5*(get_vertex(output_vertices, he.source) + get_vertex(output_vertices, he.target))
+            
+            is_boundary_vertex[he.source] = is_boundary_vertex[he.target] = true
+            
         end
         
-        set_vertex(output_vertices, edge_point_index(ei), edge_point / n)
+        #println("edge point ", ei, " ", edge_point)
+        
+        set_vertex(output_vertices, edge_point_index(ei), edge_point)
     end
 
     # Move original input vertices to new positions
@@ -168,30 +178,52 @@ function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, 
             # Skip unconnected vertices
             continue
         end
-                
+        
         P = get_vertex(output_vertices, vi)
-        F_sum = SVector{3, Float32}(0, 0, 0)
-        R_sum = SVector{3, Float32}(0, 0, 0)
-        n = 0
         
-        he = start = vertex_start_edges[vi]
-        while true
-            F_sum += get_vertex(output_vertices, face_point_index(he.face))
-            # XXX could take out P here as use it once in R= below
-            R_sum += 0.5f0 * (P + get_vertex(output_vertices, he.target))
-            n += 1
+        if is_boundary_vertex[vi]
+        
+            he = vertex_start_edges[vi]
             
-            # XXX need to recheck this works correctly
-            if he.sibling == nothing break end
-            
-            he = he.sibling.next
-            if he == start break end
-        end
+            Pp = (
+                get_vertex(output_vertices, he.target)
+                + 
+                6*P 
+                +
+                get_vertex(output_vertices, he.prev.source)
+            ) / 8
+        
+            set_vertex(output_vertices, vi, Pp)
+        
+        else
                 
-        F = F_sum / n
-        R = R_sum / n
-        
-        set_vertex(output_vertices, vi, (F + 2*R + (n-3)*P) / n)        
+            F_sum = SVector{3, Float32}(0, 0, 0)
+            R_sum = SVector{3, Float32}(0, 0, 0)
+            n = 0
+            
+            # R = average of edge midpoints 
+            #   = 1/n * sum_i(0.5*(P+Q_i))
+            #   = 1/n * (0.5*n*P + 0.5*sum_i(Q_i))
+            #   = 0.5*P + 1/2n * sum_i(Q_i) 
+            
+            he = start = vertex_start_edges[vi]
+            while true
+                F_sum += get_vertex(output_vertices, face_point_index(he.face))                
+                R_sum += get_vertex(output_vertices, he.target)
+                n += 1
+                
+                @assert he.sibling != nothing 
+                
+                he = he.sibling.next
+                if he == start break end
+            end
+                    
+            F = F_sum / n
+            R = R_sum / (2*n) + 0.5f0 * P
+            
+            set_vertex(output_vertices, vi, (F + 2*R + (n-3)*P) / n)        
+            
+        end
     end
     
     # Create new face loops for the quads for each subdivided original face
