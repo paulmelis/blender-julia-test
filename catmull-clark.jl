@@ -14,6 +14,7 @@
 
 using Printf
 using StaticArrays
+using PythonCall
 
 include("halfedge.jl")
 
@@ -42,11 +43,38 @@ function time_subdivide(vertices::Array, loop_start::Array, loop_total::Array, l
     @timev subdivide(vertices, loop_start, loop_total, loops)
 end
 
-function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops::Array)
+function subdivide_ptrs(
+    vertices_ptr, vertices_length,
+    loop_start_ptr, loop_start_length,
+    loop_total_ptr, loop_total_length,
+    loops_ptr, loops_length)
+    
+    #println(vertices_ptr, " ", vertices_length)
+
+    vertices = unsafe_wrap(Array{Float32,1}, Ptr{Float32}(vertices_ptr), vertices_length);
+    loop_start = unsafe_wrap(Array{UInt32,1}, Ptr{UInt32}(loop_start_ptr), loop_start_length);
+    loop_total = unsafe_wrap(Array{UInt32,1}, Ptr{UInt32}(loop_total_ptr), loop_total_length);
+    loops = unsafe_wrap(Array{UInt32,1}, Ptr{UInt32}(loops_ptr), loops_length);
+    
     #println(vertices)
     #println(loop_start)
     #println(loop_total)
     #println(loops)
+    
+    return subdivide(vertices, loop_start, loop_total, loops)
+
+end
+
+function subdivide(vertices::PyArray, loop_start::PyArray, loop_total::PyArray, loops::PyArray)
+    #println("(Julia) vertices ", vertices)
+    #println("(Julia) loop_start ", loop_start)
+    #println("(Julia) loop_total ", loop_total)
+    #println("(Julia) loops ", loops)
+
+    # Note: we turn Blender's 0-based indices into Julia's 
+    # 1-based indices to avoid a whole load of +/- 1 fiddling
+    loop_start .+= 1
+    loops .+= 1
     
     t0 = time()
     
@@ -191,5 +219,9 @@ function subdivide(vertices::Array, loop_start::Array, loop_total::Array, loops:
     t2 = time()
     @printf("(Julia) Subdivision done in %.3fms\n", 1000*(t2-t1))
     
+    # Back to the sanity of 0-based indexing ;-)
+    output_loop_start .-= 1
+    output_loops .-= 1
+
     return output_vertices, output_loop_start, output_loop_total, output_loops
 end
